@@ -25,12 +25,13 @@ class ExampleLogger(MetricsLogger):
 def build_rocketsim_env():
     import rlgym_sim
     from rlgym_sim.utils.reward_functions import CombinedReward
-    from rlgym_sim.utils.reward_functions.common_rewards import VelocityPlayerToBallReward, VelocityBallToGoalReward, EventReward,FaceBallReward
+    from rlgym_sim.utils.reward_functions.common_rewards import TouchBallReward,VelocityPlayerToBallReward, VelocityBallToGoalReward, EventReward,FaceBallReward
     from rlgym_sim.utils.obs_builders import DefaultObs
     from rlgym_sim.utils.terminal_conditions.common_conditions import NoTouchTimeoutCondition, GoalScoredCondition
     from rlgym_sim.utils import common_values
     from rlgym_sim.utils.action_parsers import DiscreteAction
     from rlgym_sim.utils.state_setters import RandomState
+    from extra_files.air_rewards import InAirReward
 
     import rocketsimvis_rlgym_sim_client as rsv
     
@@ -47,8 +48,11 @@ def build_rocketsim_env():
     rewards_to_combine = (VelocityPlayerToBallReward(),
                           VelocityBallToGoalReward(),
                           FaceBallReward(),
-                          EventReward(team_goal=1, concede=-1, demo=0.1))
-    reward_weights = (0.1,0.1, 0.01, 10.0)
+                          EventReward(team_goal=1, concede=-1, demo=0.1),
+                          TouchBallReward(),
+                          InAirReward()
+                          )
+    reward_weights = (3,1, 1, 10.0,20,1)
 
     reward_fn = CombinedReward(reward_functions=rewards_to_combine,
                                reward_weights=reward_weights)
@@ -59,7 +63,7 @@ def build_rocketsim_env():
         lin_vel_coef=1 / common_values.CAR_MAX_SPEED,
         ang_vel_coef=1 / common_values.CAR_MAX_ANG_VEL)
     
-    state_setter = RandomState(True,True,True)
+    state_setter = RandomState(False,False,True)
 
     env = rlgym_sim.make(tick_skip=tick_skip,
                          team_size=team_size,
@@ -79,7 +83,7 @@ if __name__ == "__main__":
     metrics_logger = ExampleLogger()
 
     # 32 processes
-    n_proc = 32
+    n_proc = 16
 
     # educated guess - could be slightly higher or lower
     min_inference_size = max(1, int(round(n_proc * 0.9)))
@@ -94,10 +98,15 @@ if __name__ == "__main__":
                       exp_buffer_size=150000,
                       ppo_minibatch_size=50000,
                       ppo_ent_coef=0.001,
-                      ppo_epochs=1,
+                      ppo_epochs=2,
                       standardize_returns=True,
                       standardize_obs=False,
                       save_every_ts=100_000,
                       timestep_limit=1_000_000_000,
-                      log_to_wandb=True)
+                      log_to_wandb=True,
+                      policy_layer_sizes=(1024, 1024, 512, 512),
+                      critic_layer_sizes=(1024, 1024, 512, 512),
+                      policy_lr=0.0002,
+                      critic_lr=0.0002
+                      )
     learner.learn()
