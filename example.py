@@ -25,11 +25,12 @@ class ExampleLogger(MetricsLogger):
 def build_rocketsim_env():
     import rlgym_sim
     from rlgym_sim.utils.reward_functions import CombinedReward
-    from rlgym_sim.utils.reward_functions.common_rewards import VelocityPlayerToBallReward, VelocityBallToGoalReward, EventReward
+    from rlgym_sim.utils.reward_functions.common_rewards import VelocityPlayerToBallReward, VelocityBallToGoalReward, EventReward,FaceBallReward
     from rlgym_sim.utils.obs_builders import DefaultObs
     from rlgym_sim.utils.terminal_conditions.common_conditions import NoTouchTimeoutCondition, GoalScoredCondition
     from rlgym_sim.utils import common_values
     from rlgym_sim.utils.action_parsers import DiscreteAction
+    from rlgym_sim.utils.state_setters import RandomState
 
     import rocketsimvis_rlgym_sim_client as rsv
     
@@ -45,8 +46,9 @@ def build_rocketsim_env():
 
     rewards_to_combine = (VelocityPlayerToBallReward(),
                           VelocityBallToGoalReward(),
+                          FaceBallReward(),
                           EventReward(team_goal=1, concede=-1, demo=0.1))
-    reward_weights = (0.01, 0.1, 10.0)
+    reward_weights = (0.1,0.1, 0.01, 10.0)
 
     reward_fn = CombinedReward(reward_functions=rewards_to_combine,
                                reward_weights=reward_weights)
@@ -56,6 +58,8 @@ def build_rocketsim_env():
         ang_coef=1 / np.pi,
         lin_vel_coef=1 / common_values.CAR_MAX_SPEED,
         ang_vel_coef=1 / common_values.CAR_MAX_ANG_VEL)
+    
+    state_setter = RandomState(True,True,True)
 
     env = rlgym_sim.make(tick_skip=tick_skip,
                          team_size=team_size,
@@ -63,7 +67,8 @@ def build_rocketsim_env():
                          terminal_conditions=terminal_conditions,
                          reward_fn=reward_fn,
                          obs_builder=obs_builder,
-                         action_parser=action_parser)
+                         action_parser=action_parser,
+                         state_setter=state_setter)
 
     type(env).render = lambda self: rsv.send_state_to_rocketsimvis(self._prev_state)
 
