@@ -9,3 +9,4 @@ sympy>1.10
 torch>1.13
 typing_extensions>4.6
 wandb>0.15
+rocketsim
