@@ -32,6 +32,7 @@ def build_rocketsim_env():
     from rlgym_sim.utils.action_parsers import DiscreteAction
     from rlgym_sim.utils.state_setters import RandomState
     from extra_files.air_rewards import InAirReward
+    from extra_files.sequential_rewards import SequentialRewards
 
     import rocketsimvis_rlgym_sim_client as rsv
     
@@ -45,17 +46,33 @@ def build_rocketsim_env():
     action_parser = DiscreteAction()
     terminal_conditions = [NoTouchTimeoutCondition(timeout_ticks), GoalScoredCondition()]
 
-    rewards_to_combine = (VelocityPlayerToBallReward(),
+    rewards_to_combine_1 = (VelocityPlayerToBallReward(),
                           VelocityBallToGoalReward(),
                           FaceBallReward(),
                           EventReward(team_goal=1, concede=-1, demo=0.1),
                           TouchBallReward(),
                           InAirReward()
                           )
-    reward_weights = (3,1, 1, 10.0,20,1)
+    reward_weights_1 = (3,1, 1, 10.0,20,1)
 
-    reward_fn = CombinedReward(reward_functions=rewards_to_combine,
-                               reward_weights=reward_weights)
+    reward_fn_1 = CombinedReward(reward_functions=rewards_to_combine_1,
+                               reward_weights=reward_weights_1)
+    
+    rewards_to_combine_2 = (VelocityPlayerToBallReward(),
+                          VelocityBallToGoalReward(),
+                          FaceBallReward(),
+                          EventReward(team_goal=1, concede=-1, demo=0.1),
+                          TouchBallReward(),
+                          InAirReward()
+                          )
+    reward_weights_2 = (3,8, 1, 10.0,1,0)
+
+    reward_fn_2 = CombinedReward(reward_functions=rewards_to_combine_2,
+                               reward_weights=reward_weights_2)
+    
+    rewards_order = [reward_fn_1,reward_fn_2]
+    step_requirements = [1000000,1000000000]
+    reward_fn = SequentialRewards(rewards_order,step_requirements)
 
     obs_builder = DefaultObs(
         pos_coef=np.asarray([1 / common_values.SIDE_WALL_X, 1 / common_values.BACK_NET_Y, 1 / common_values.CEILING_Z]),
