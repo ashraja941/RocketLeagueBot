@@ -71,7 +71,7 @@ def build_rocketsim_env():
                                reward_weights=reward_weights_2)
     
     rewards_order = [reward_fn_1,reward_fn_2]
-    step_requirements = [1000000,1000000000]
+    step_requirements = [20000000,70000000]
     reward_fn = SequentialRewards(rewards_order,step_requirements)
 
     obs_builder = DefaultObs(
@@ -106,7 +106,6 @@ if __name__ == "__main__":
     min_inference_size = max(1, int(round(n_proc * 0.9)))
 
     learner = Learner(build_rocketsim_env,
-                      render=True,
                       n_proc=n_proc,
                       min_inference_size=min_inference_size,
                       metrics_logger=metrics_logger,
@@ -115,15 +114,10 @@ if __name__ == "__main__":
                       exp_buffer_size=150000,
                       ppo_minibatch_size=50000,
                       ppo_ent_coef=0.001,
-                      ppo_epochs=2,
+                      ppo_epochs=1,
                       standardize_returns=True,
                       standardize_obs=False,
                       save_every_ts=100_000,
-                      timestep_limit=1_000_000_000,
-                      log_to_wandb=True,
-                      policy_layer_sizes=(1024, 1024, 512, 512),
-                      critic_layer_sizes=(1024, 1024, 512, 512),
-                      policy_lr=0.0002,
-                      critic_lr=0.0002
-                      )
+                      timestep_limit=70_000_000,
+                      log_to_wandb=True)
     learner.learn()
