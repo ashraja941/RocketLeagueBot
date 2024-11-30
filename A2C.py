@@ -31,7 +31,7 @@ def build_rocketsim_env():
     from rlgym_sim.utils.terminal_conditions.common_conditions import NoTouchTimeoutCondition, GoalScoredCondition
     from rlgym_sim.utils import common_values
     from rlgym_sim.utils.action_parsers import DiscreteAction
-    from rlgym_sim.utils.state_setters import RandomState
+    from rlgym_sim.utils.state_setters import RandomState,DefaultState
     from extra_files.air_rewards import InAirReward
     from extra_files.sequential_rewards import SequentialRewards
 
@@ -54,7 +54,7 @@ def build_rocketsim_env():
                           TouchBallReward(),
                           InAirReward()
                           )
-    reward_weights_1 = (3,1, 1, 10.0,20,0)
+    reward_weights_1 = (5,1, 1, 10.0,20,0)
 
     reward_fn_1 = CombinedReward(reward_functions=rewards_to_combine_1,
                                reward_weights=reward_weights_1)
@@ -72,7 +72,7 @@ def build_rocketsim_env():
                                reward_weights=reward_weights_2)
     
     rewards_order = [reward_fn_1,reward_fn_2]
-    step_requirements = [20000000,70000000]
+    step_requirements = [25000000,70000000]
     reward_fn = SequentialRewards(rewards_order,step_requirements)
 
     obs_builder = DefaultObs(
@@ -81,7 +81,8 @@ def build_rocketsim_env():
         lin_vel_coef=1 / common_values.CAR_MAX_SPEED,
         ang_vel_coef=1 / common_values.CAR_MAX_ANG_VEL)
     
-    state_setter = RandomState(False,False,True)
+    # state_setter = RandomState(False,False,True)
+    state_setter = DefaultState()
 
     env = rlgym_sim.make(tick_skip=tick_skip,
                          team_size=team_size,
@@ -111,11 +112,11 @@ if __name__ == "__main__":
         n_proc=n_proc,
         min_inference_size=min_inference_size,
         metrics_logger=metrics_logger,
-        ppo_batch_size=50000,
-        ts_per_iteration=50000,
-        exp_buffer_size=150000,
-        ppo_minibatch_size=50000,
-        ppo_ent_coef=0.001,
+        ppo_batch_size=100000,
+        ts_per_iteration=100000,
+        exp_buffer_size=300000,
+        ppo_minibatch_size=100000,
+        ppo_ent_coef=0.1,
         ppo_epochs=2,
         standardize_returns=True,
         standardize_obs=False,
@@ -124,7 +125,7 @@ if __name__ == "__main__":
         log_to_wandb=True,
         policy_layer_sizes=(1024, 1024, 512, 512),
         critic_layer_sizes=(1024, 1024, 512, 512),
-        policy_lr=0.0002,
-        critic_lr=0.0002
+        policy_lr=0.0001,
+        critic_lr=0.0001
     )
     learner.learn()

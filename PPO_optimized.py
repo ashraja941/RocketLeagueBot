@@ -65,13 +65,13 @@ def build_rocketsim_env():
                           TouchBallReward(),
                           InAirReward()
                           )
-    reward_weights_2 = (3,8, 1, 10.0,1,0)
+    reward_weights_2 = (3,8, 1, 20.0,1,0)
 
     reward_fn_2 = CombinedReward(reward_functions=rewards_to_combine_2,
                                reward_weights=reward_weights_2)
     
     rewards_order = [reward_fn_1,reward_fn_2]
-    step_requirements = [20000000,70000000]
+    step_requirements = [25000000,70000000]
     reward_fn = SequentialRewards(rewards_order,step_requirements)
 
     obs_builder = DefaultObs(
