@@ -1,7 +1,7 @@
 import numpy as np
 from rlgym_sim.utils.gamestates import GameState
 from rlgym_ppo.util import MetricsLogger
-
+from rlgym_ppo.learner_a2c import A2C_Learner
 
 class ExampleLogger(MetricsLogger):
     def _collect_metrics(self, game_state: GameState) -> list:
@@ -53,7 +53,7 @@ def build_rocketsim_env():
                           TouchBallReward(),
                           InAirReward()
                           )
-    reward_weights_1 = (3,1, 1, 10.0,20,1)
+    reward_weights_1 = (3,1, 1, 10.0,20,0)
 
     reward_fn_1 = CombinedReward(reward_functions=rewards_to_combine_1,
                                reward_weights=reward_weights_1)
@@ -71,7 +71,7 @@ def build_rocketsim_env():
                                reward_weights=reward_weights_2)
     
     rewards_order = [reward_fn_1,reward_fn_2]
-    step_requirements = [25000000,70000000]
+    step_requirements = [30000000,70000000]
     reward_fn = SequentialRewards(rewards_order,step_requirements)
 
     obs_builder = DefaultObs(
@@ -100,30 +100,25 @@ if __name__ == "__main__":
     metrics_logger = ExampleLogger()
 
     # 32 processes
-    n_proc = 16
+    n_proc = 32
 
     # educated guess - could be slightly higher or lower
     min_inference_size = max(1, int(round(n_proc * 0.9)))
 
-    learner = Learner(build_rocketsim_env,
-                      render=True,
+    learner = A2C_Learner(build_rocketsim_env,
                       n_proc=n_proc,
+                      render=True,
                       min_inference_size=min_inference_size,
                       metrics_logger=metrics_logger,
                       ppo_batch_size=50000,
                       ts_per_iteration=50000,
                       exp_buffer_size=150000,
                       ppo_minibatch_size=50000,
-                      ppo_ent_coef=0.01,
-                      ppo_epochs=2,
+                      ppo_ent_coef=0.001,
+                      ppo_epochs=1,
                       standardize_returns=True,
                       standardize_obs=False,
                       save_every_ts=100_000,
                       timestep_limit=70_000_000,
-                      log_to_wandb=True,
-                      policy_layer_sizes=(1024, 1024, 512, 512),
-                      critic_layer_sizes=(1024, 1024, 512, 512),
-                      policy_lr=0.0002,
-                      critic_lr=0.0002
-                      )
+                      log_to_wandb=True)
     learner.learn()

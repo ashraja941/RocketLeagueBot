@@ -162,7 +162,10 @@ class A2C_Learner(object):
                 critic_lr=critic_lr,
                 batch_size=ppo_batch_size,
                 ent_coef=ppo_ent_coef,  # Assuming ent_coef is used similarly
-                device=self.device
+                device=self.device,
+                n_epochs=1,
+                clip_range=1,
+                mini_batch_size=1
             )
         else:
             print("Initializing PPO...")
